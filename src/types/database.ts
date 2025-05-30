@@ -20,7 +20,7 @@ export interface Entrega {
   id: number
   cliente_id: number
   direccion_destino: string
-  estado: 'pendiente' | 'en_progreso' | 'completada' | 'cancelada'
+  estado: 'pendiente_asignacion' | 'en_progreso' | 'completada' | 'cancelada'
   fecha_entrega: string
   repartidor_id?: number
   notas?: string
@@ -47,4 +47,33 @@ export interface AuthUser {
     nombre?: string
     apellido?: string
   }
+}
+
+export interface Reparto {
+  id: number
+  fecha_reparto: string
+  repartidor_id: number
+  empresa_asociada_id?: number
+  estado: 'planificado' | 'en_progreso' | 'completado' | 'cancelado'
+  notas?: string
+  created_at?: string
+  updated_at?: string
+  user_id?: string
+  paradas?: ParadaReparto[]
+}
+
+export interface ParadaReparto {
+  id: number
+  reparto_id: number
+  envio_id?: number
+  descripcion_parada?: string
+  orden_visita?: number
+  estado_parada: 'asignado' | 'en_progreso' | 'completado' | 'cancelado'
+  hora_estimada_llegada?: string
+  hora_real_llegada?: string
+  notas_parada?: string
+  created_at?: string
+  updated_at?: string
+  user_id?: string
+  envio?: Entrega
 }

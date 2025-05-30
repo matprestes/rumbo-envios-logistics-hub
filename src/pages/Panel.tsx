@@ -1,16 +1,19 @@
 
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/hooks/useAuth'
 import { useEntregas } from '@/hooks/useEntregas'
-import { Package, MapPin, User, LogOut, Clock, CheckCircle, Truck } from 'lucide-react'
+import { useRepartos } from '@/hooks/useRepartos'
+import { Package, MapPin, User, LogOut, Clock, CheckCircle, Truck, Route } from 'lucide-react'
 
 const Panel = () => {
+  const navigate = useNavigate()
   const { user, repartidor, cerrarSesion, loading: authLoading } = useAuth()
   const { entregas, loading: entregasLoading, actualizarEstado, marcarComoCompletada } = useEntregas()
+  const { repartos, loading: repartosLoading } = useRepartos()
   const [selectedTab, setSelectedTab] = useState('todas')
 
   if (!authLoading && !user) {
@@ -28,6 +31,7 @@ const Panel = () => {
     completadas: entregas.filter(e => e.estado === 'completada').length,
     pendientes: entregas.filter(e => e.estado === 'pendiente_asignacion').length,
     enProgreso: entregas.filter(e => e.estado === 'en_progreso').length,
+    repartosActivos: repartos.filter(r => r.estado === 'en_progreso' || r.estado === 'planificado').length,
   }
 
   const filteredEntregas = selectedTab === 'todas' 
@@ -50,7 +54,7 @@ const Panel = () => {
     }
   }
 
-  if (authLoading || entregasLoading) {
+  if (authLoading || entregasLoading || repartosLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="flex items-center justify-center gap-3">
@@ -94,7 +98,7 @@ const Panel = () => {
 
       <main className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -128,6 +132,37 @@ const Panel = () => {
                 </div>
                 <Clock className="h-8 w-8 text-orange-600" />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Repartos Activos</p>
+                  <p className="text-2xl font-bold text-purple-600">{stats.repartosActivos}</p>
+                </div>
+                <Route className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Navegación rápida */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/repartos')}>
+            <CardContent className="p-6 text-center">
+              <Route className="h-12 w-12 mx-auto text-blue-600 mb-3" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ver Mis Repartos</h3>
+              <p className="text-gray-600">Gestiona las rutas y paradas asignadas</p>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-md transition-shadow">
+            <CardContent className="p-6 text-center">
+              <Package className="h-12 w-12 mx-auto text-green-600 mb-3" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Entregas del Día</h3>
+              <p className="text-gray-600">Revisa las entregas individuales</p>
             </CardContent>
           </Card>
         </div>

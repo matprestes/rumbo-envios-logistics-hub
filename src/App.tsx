@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Login from "./pages/Login";
 import Panel from "./pages/Panel";
+import Repartos from "./pages/Repartos";
+import DetalleReparto from "./pages/DetalleReparto";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -23,6 +25,8 @@ const App = () => (
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/panel" element={<Panel />} />
+            <Route path="/repartos" element={<Repartos />} />
+            <Route path="/reparto/:id" element={<DetalleReparto />} />
             <Route path="/demo" element={<Index />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
