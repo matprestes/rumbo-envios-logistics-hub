@@ -18,13 +18,32 @@ export interface Cliente {
 
 export interface Entrega {
   id: number
-  cliente_id: number
+  remitente_cliente_id?: number
+  nombre_destinatario?: string
+  telefono_destinatario?: string
+  cliente_temporal_nombre?: string
+  cliente_temporal_telefono?: string
+  direccion_origen: string
+  latitud_origen?: number
+  longitud_origen?: number
+  empresa_origen_id?: number
+  notas_origen?: string
   direccion_destino: string
-  estado: 'pendiente_asignacion' | 'en_progreso' | 'completada' | 'cancelada'
-  fecha_entrega: string
-  repartidor_id?: number
-  notas?: string
-  foto_comprobante?: string
+  latitud_destino?: number
+  longitud_destino?: number
+  empresa_destino_id?: number
+  notas_destino?: string
+  tipo_paquete_id?: number
+  peso_kg?: number
+  tipo_servicio_id?: number
+  precio: number
+  estado: 'pendiente_asignacion' | 'asignado' | 'en_progreso' | 'completada' | 'cancelada'
+  fecha_estimada_entrega?: string
+  horario_retiro_desde?: string
+  horario_entrega_hasta?: string
+  repartidor_asignado_id?: number
+  notas_conductor?: string
+  detalles_adicionales?: string
   created_at?: string
   updated_at?: string
   user_id?: string
@@ -33,11 +52,12 @@ export interface Entrega {
 
 export interface Repartidor {
   id: number
+  user_auth_id?: string
   nombre: string
-  user_auth_id: string
   estado: 'activo' | 'inactivo'
   created_at?: string
   updated_at?: string
+  user_id?: string
 }
 
 export interface AuthUser {
