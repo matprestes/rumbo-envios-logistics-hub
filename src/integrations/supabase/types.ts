@@ -24,7 +24,7 @@ export type Database = {
           notas: string | null
           telefono: string | null
           updated_at: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           apellido: string
@@ -40,7 +40,7 @@ export type Database = {
           notas?: string | null
           telefono?: string | null
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           apellido?: string
@@ -56,7 +56,7 @@ export type Database = {
           notas?: string | null
           telefono?: string | null
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -81,7 +81,7 @@ export type Database = {
           notas: string | null
           telefono: string | null
           updated_at: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -95,7 +95,7 @@ export type Database = {
           notas?: string | null
           telefono?: string | null
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -109,7 +109,7 @@ export type Database = {
           notas?: string | null
           telefono?: string | null
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -144,7 +144,7 @@ export type Database = {
           tipo_paquete_id: number | null
           tipo_servicio_id: number | null
           updated_at: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           cliente_temporal_nombre?: string | null
@@ -176,7 +176,7 @@ export type Database = {
           tipo_paquete_id?: number | null
           tipo_servicio_id?: number | null
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           cliente_temporal_nombre?: string | null
@@ -208,7 +208,7 @@ export type Database = {
           tipo_paquete_id?: number | null
           tipo_servicio_id?: number | null
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -268,7 +268,7 @@ export type Database = {
           orden_visita: number | null
           reparto_id: number
           updated_at: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -284,7 +284,7 @@ export type Database = {
           orden_visita?: number | null
           reparto_id: number
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -300,7 +300,7 @@ export type Database = {
           orden_visita?: number | null
           reparto_id?: number
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -326,7 +326,8 @@ export type Database = {
           id: number
           nombre: string
           updated_at: string | null
-          user_id: number | null
+          user_auth_id: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -334,7 +335,8 @@ export type Database = {
           id?: never
           nombre: string
           updated_at?: string | null
-          user_id?: number | null
+          user_auth_id?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -342,7 +344,8 @@ export type Database = {
           id?: never
           nombre?: string
           updated_at?: string | null
-          user_id?: number | null
+          user_auth_id?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -356,7 +359,7 @@ export type Database = {
           notas: string | null
           repartidor_id: number
           updated_at: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -367,7 +370,7 @@ export type Database = {
           notas?: string | null
           repartidor_id: number
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -378,7 +381,7 @@ export type Database = {
           notas?: string | null
           repartidor_id?: number
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -407,7 +410,7 @@ export type Database = {
           precio_por_km: number
           tipo_servicio_id: number
           updated_at: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -418,7 +421,7 @@ export type Database = {
           precio_por_km: number
           tipo_servicio_id: number
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -429,7 +432,7 @@ export type Database = {
           precio_por_km?: number
           tipo_servicio_id?: number
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -448,7 +451,7 @@ export type Database = {
           id: number
           nombre: string
           updated_at: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -456,7 +459,7 @@ export type Database = {
           id?: never
           nombre: string
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -464,7 +467,7 @@ export type Database = {
           id?: never
           nombre?: string
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -477,7 +480,7 @@ export type Database = {
           precio_base: number | null
           precio_extra_km_default: number | null
           updated_at: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -487,7 +490,7 @@ export type Database = {
           precio_base?: number | null
           precio_extra_km_default?: number | null
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -497,7 +500,7 @@ export type Database = {
           precio_base?: number | null
           precio_extra_km_default?: number | null
           updated_at?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -514,8 +517,14 @@ export type Database = {
         | "asignado"
         | "en_camino"
         | "entregado"
+        | "no_entregado"
+        | "cancelado"
       estado_general_enum: "activo" | "inactivo"
-      estado_reparto_enum: "planificado" | "en_progreso" | "completado"
+      estado_reparto_enum:
+        | "planificado"
+        | "en_progreso"
+        | "completado"
+        | "cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -636,9 +645,16 @@ export const Constants = {
         "asignado",
         "en_camino",
         "entregado",
+        "no_entregado",
+        "cancelado",
       ],
       estado_general_enum: ["activo", "inactivo"],
-      estado_reparto_enum: ["planificado", "en_progreso", "completado"],
+      estado_reparto_enum: [
+        "planificado",
+        "en_progreso",
+        "completado",
+        "cancelado",
+      ],
     },
   },
 } as const

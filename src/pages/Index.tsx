@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Package, MapPin, Clock, User, Truck, CheckCircle } from 'lucide-react';
+import { Package, MapPin, Clock, User, Truck, CheckCircle, Users, Database } from 'lucide-react';
 import DeliveryCard from '@/components/DeliveryCard';
 import StatsCard from '@/components/StatsCard';
 import Header from '@/components/Header';
+import { useClientes } from '@/hooks/useClientes';
 
 // Datos simulados del repartidor
 const mockRepartidor = {
@@ -67,6 +68,7 @@ const mockEntregas = [
 const Index = () => {
   const [entregas, setEntregas] = useState(mockEntregas);
   const [selectedTab, setSelectedTab] = useState('todas');
+  const { clientes, loading, error } = useClientes();
 
   const stats = {
     completadas: entregas.filter(e => e.estado === 'completado').length,
@@ -120,6 +122,71 @@ const Index = () => {
             color="green"
           />
         </div>
+
+        {/* Conexión a Supabase - Clientes */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Datos de Supabase - Clientes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">Cargando clientes...</span>
+              </div>
+            )}
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-800">Error: {error}</p>
+              </div>
+            )}
+            
+            {!loading && !error && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium">
+                    {clientes.length} clientes encontrados en la base de datos
+                  </span>
+                </div>
+                
+                {clientes.length > 0 ? (
+                  <div className="grid gap-3 max-h-64 overflow-y-auto">
+                    {clientes.slice(0, 5).map((cliente) => (
+                      <div key={cliente.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {cliente.nombre} {cliente.apellido}
+                          </p>
+                          <p className="text-sm text-gray-600">{cliente.direccion}</p>
+                          {cliente.telefono && (
+                            <p className="text-xs text-gray-500">{cliente.telefono}</p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {cliente.estado || 'Activo'}
+                        </Badge>
+                      </div>
+                    ))}
+                    {clientes.length > 5 && (
+                      <p className="text-sm text-gray-500 text-center">
+                        ... y {clientes.length - 5} clientes más
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">
+                    No se encontraron clientes en la base de datos
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Filtros */}
         <Card className="mb-6">
