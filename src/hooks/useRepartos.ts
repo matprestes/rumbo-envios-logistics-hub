@@ -5,16 +5,23 @@ import { Reparto, ParadaReparto } from '@/types/database'
 import { useAuth } from './useAuth'
 
 export function useRepartos() {
-  const { repartidor } = useAuth()
+  const { repartidor, user } = useAuth()
   const [repartos, setRepartos] = useState<Reparto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const obtenerRepartos = async () => {
     try {
-      if (!repartidor?.id) return
+      if (!repartidor?.id || !user) {
+        setRepartos([])
+        setLoading(false)
+        return
+      }
       
       setLoading(true)
+      setError(null)
+      
+      // RLS policies will ensure user only sees their own repartos
       const { data, error } = await supabase
         .from('repartos')
         .select(`
@@ -27,11 +34,15 @@ export function useRepartos() {
         .eq('repartidor_id', repartidor.id)
         .order('fecha_reparto', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching repartos:', error)
+        throw error
+      }
 
       setRepartos(data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido')
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
+      setError(errorMessage)
       console.error('Error obteniendo repartos:', err)
     } finally {
       setLoading(false)
@@ -40,6 +51,10 @@ export function useRepartos() {
 
   const obtenerRepartoPorId = async (repartoId: number) => {
     try {
+      if (!repartidor?.id || !user) {
+        return { data: null, error: 'Usuario no autenticado' }
+      }
+
       const { data, error } = await supabase
         .from('repartos')
         .select(`
@@ -50,9 +65,17 @@ export function useRepartos() {
           )
         `)
         .eq('id', repartoId)
-        .single()
+        .eq('repartidor_id', repartidor.id) // Ensure ownership
+        .maybeSingle()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching reparto:', error)
+        throw error
+      }
+
+      if (!data) {
+        return { data: null, error: 'Reparto no encontrado o no autorizado' }
+      }
 
       return { data, error: null }
     } catch (err) {
@@ -63,6 +86,28 @@ export function useRepartos() {
 
   const actualizarEstadoReparto = async (repartoId: number, nuevoEstado: string) => {
     try {
+      if (!repartidor?.id || !user) {
+        return { error: 'Usuario no autenticado' }
+      }
+
+      // Verify ownership before updating
+      const reparto = repartos.find(r => r.id === repartoId)
+      if (!reparto || reparto.repartidor_id !== repartidor.id) {
+        return { error: 'No autorizado para este reparto' }
+      }
+
+      // Validate state transition
+      const validTransitions: Record<string, string[]> = {
+        'planificado': ['en_progreso', 'cancelado'],
+        'en_progreso': ['completado', 'cancelado'],
+        'completado': [], // No transitions from completed
+        'cancelado': [] // No transitions from cancelled
+      }
+
+      if (!validTransitions[reparto.estado]?.includes(nuevoEstado)) {
+        return { error: 'Transición de estado inválida' }
+      }
+
       const { error } = await supabase
         .from('repartos')
         .update({ 
@@ -70,6 +115,7 @@ export function useRepartos() {
           updated_at: new Date().toISOString()
         })
         .eq('id', repartoId)
+        .eq('repartidor_id', repartidor.id) // Double-check ownership
 
       if (error) throw error
 
@@ -89,10 +135,10 @@ export function useRepartos() {
   }
 
   useEffect(() => {
-    if (repartidor?.id) {
+    if (repartidor?.id && user) {
       obtenerRepartos()
     }
-  }, [repartidor?.id])
+  }, [repartidor?.id, user])
 
   return {
     repartos,

@@ -23,22 +23,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Configurar listener de cambios de autenticación
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id)
         setSession(session)
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          // Obtener datos del repartidor
+          // Defer Supabase calls with setTimeout to prevent auth callback deadlock
           setTimeout(async () => {
-            const { data: repartidorData } = await supabase
-              .from('repartidores')
-              .select('*')
-              .eq('user_auth_id', session.user.id)
-              .single()
-            
-            setRepartidor(repartidorData)
+            try {
+              const { data: repartidorData, error } = await supabase
+                .from('repartidores')
+                .select('*')
+                .eq('user_auth_id', session.user.id)
+                .maybeSingle() // Use maybeSingle instead of single to handle no data gracefully
+              
+              if (error) {
+                console.error('Error fetching repartidor:', error)
+              } else {
+                setRepartidor(repartidorData)
+              }
+            } catch (err) {
+              console.error('Error in repartidor fetch:', err)
+            }
           }, 0)
         } else {
           setRepartidor(null)
@@ -47,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    // Verificar sesión existente
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -58,28 +67,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const iniciarSesion = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      })
+      return { error }
+    } catch (err) {
+      console.error('Login error:', err)
+      return { error: err }
+    }
   }
 
   const cerrarSesion = async () => {
-    await supabase.auth.signOut()
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
   }
 
   const registrarse = async (email: string, password: string, nombre: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          nombre,
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            nombre: nombre.trim(),
+          },
+          emailRedirectTo: `${window.location.origin}/`
         },
-      },
-    })
-    return { error }
+      })
+      return { error }
+    } catch (err) {
+      console.error('Registration error:', err)
+      return { error: err }
+    }
   }
 
   const value = {

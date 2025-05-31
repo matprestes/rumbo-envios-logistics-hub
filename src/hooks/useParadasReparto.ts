@@ -2,17 +2,43 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { ParadaReparto } from '@/types/database'
+import { useAuth } from './useAuth'
 
 export function useParadasReparto(repartoId?: number) {
+  const { repartidor, user } = useAuth()
   const [paradas, setParadas] = useState<ParadaReparto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const obtenerParadas = async () => {
     try {
-      if (!repartoId) return
+      if (!repartoId || !repartidor?.id || !user) {
+        setParadas([])
+        setLoading(false)
+        return
+      }
       
       setLoading(true)
+      setError(null)
+      
+      // First verify reparto ownership
+      const { data: repartoData, error: repartoError } = await supabase
+        .from('repartos')
+        .select('id')
+        .eq('id', repartoId)
+        .eq('repartidor_id', repartidor.id)
+        .maybeSingle()
+
+      if (repartoError) {
+        console.error('Error verifying reparto ownership:', repartoError)
+        throw repartoError
+      }
+
+      if (!repartoData) {
+        throw new Error('Reparto no encontrado o no autorizado')
+      }
+
+      // Now fetch paradas - RLS policies will ensure proper access
       const { data, error } = await supabase
         .from('paradas_reparto')
         .select(`
@@ -22,11 +48,15 @@ export function useParadasReparto(repartoId?: number) {
         .eq('reparto_id', repartoId)
         .order('orden_visita', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching paradas:', error)
+        throw error
+      }
 
       setParadas(data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido')
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
+      setError(errorMessage)
       console.error('Error obteniendo paradas:', err)
     } finally {
       setLoading(false)
@@ -35,12 +65,34 @@ export function useParadasReparto(repartoId?: number) {
 
   const actualizarEstadoParada = async (paradaId: number, nuevoEstado: string) => {
     try {
+      if (!repartidor?.id || !user) {
+        return { error: 'Usuario no autenticado' }
+      }
+
+      // Verify ownership before updating
+      const parada = paradas.find(p => p.id === paradaId)
+      if (!parada) {
+        return { error: 'Parada no encontrada' }
+      }
+
+      // Validate state transition
+      const validTransitions: Record<string, string[]> = {
+        'asignado': ['en_progreso', 'cancelado'],
+        'en_progreso': ['completado', 'cancelado'],
+        'completado': [], // No transitions from completed
+        'cancelado': [] // No transitions from cancelled
+      }
+
+      if (!validTransitions[parada.estado_parada]?.includes(nuevoEstado)) {
+        return { error: 'Transición de estado inválida' }
+      }
+
       const updateData: any = {
         estado_parada: nuevoEstado,
         updated_at: new Date().toISOString(),
       }
 
-      // Si se marca como completado, agregar hora real
+      // If marking as completed, add real arrival time
       if (nuevoEstado === 'completado') {
         updateData.hora_real_llegada = new Date().toTimeString().split(' ')[0]
       }
@@ -76,33 +128,38 @@ export function useParadasReparto(repartoId?: number) {
   }
 
   const abrirNavegacion = (direccion: string, lat?: number, lng?: number) => {
-    // Obtener ubicación actual y abrir Google Maps
+    // Sanitize the address input to prevent potential injection
+    const sanitizedDireccion = direccion.replace(/[<>]/g, '')
+    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords
-        const destino = lat && lng ? `${lat},${lng}` : encodeURIComponent(direccion)
+        const destino = lat && lng ? `${lat},${lng}` : encodeURIComponent(sanitizedDireccion)
         const url = `https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${destino}`
-        window.open(url, '_blank')
+        window.open(url, '_blank', 'noopener,noreferrer')
       }, (error) => {
         console.error('Error obteniendo ubicación:', error)
-        // Fallback sin ubicación actual
-        const destino = lat && lng ? `${lat},${lng}` : encodeURIComponent(direccion)
+        // Fallback without current location
+        const destino = lat && lng ? `${lat},${lng}` : encodeURIComponent(sanitizedDireccion)
         const url = `https://www.google.com/maps/dir/?api=1&destination=${destino}`
-        window.open(url, '_blank')
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }, {
+        timeout: 10000, // 10 second timeout
+        enableHighAccuracy: false
       })
     } else {
-      // Fallback para navegadores sin geolocalización
-      const destino = lat && lng ? `${lat},${lng}` : encodeURIComponent(direccion)
+      // Fallback for browsers without geolocation
+      const destino = lat && lng ? `${lat},${lng}` : encodeURIComponent(sanitizedDireccion)
       const url = `https://www.google.com/maps/dir/?api=1&destination=${destino}`
-      window.open(url, '_blank')
+      window.open(url, '_blank', 'noopener,noreferrer')
     }
   }
 
   useEffect(() => {
-    if (repartoId) {
+    if (repartoId && repartidor?.id && user) {
       obtenerParadas()
     }
-  }, [repartoId])
+  }, [repartoId, repartidor?.id, user])
 
   return {
     paradas,
