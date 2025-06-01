@@ -522,9 +522,8 @@ export type Database = {
       estado_envio_enum:
         | "pendiente_asignacion"
         | "asignado"
-        | "en_camino"
-        | "entregado"
-        | "no_entregado"
+        | "en_progreso"
+        | "completado"
         | "cancelado"
       estado_general_enum: "activo" | "inactivo"
       estado_reparto_enum:
@@ -650,9 +649,8 @@ export const Constants = {
       estado_envio_enum: [
         "pendiente_asignacion",
         "asignado",
-        "en_camino",
-        "entregado",
-        "no_entregado",
+        "en_progreso",
+        "completado",
         "cancelado",
       ],
       estado_general_enum: ["activo", "inactivo"],

@@ -3,22 +3,20 @@ import React, { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { ParadaReparto } from '@/types/database'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { AlertCircle, MapPin } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 
 interface MapaRepartosProps {
   paradas: ParadaReparto[]
   proximaParada?: ParadaReparto
 }
 
+// Token de Mapbox proporcionado
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibXByZXN0ZXMiLCJhIjoiY21iZDBwdWQwMWxoczJpcHJjbmVxbWEzeCJ9.VDxqxRZfJjd_KZlocwsU8w'
+
 export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
-  const [mapboxToken, setMapboxToken] = useState('')
-  const [isTokenValid, setIsTokenValid] = useState(false)
   const [loading, setLoading] = useState(false)
 
   // Filtrar paradas que tienen coordenadas válidas
@@ -27,13 +25,12 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
   )
 
   useEffect(() => {
-    if (!mapboxToken || !mapContainer.current || paradasConCoordenadas.length === 0) return
+    if (!mapContainer.current || paradasConCoordenadas.length === 0) return
 
     setLoading(true)
     
     try {
-      mapboxgl.accessToken = mapboxToken
-      setIsTokenValid(true)
+      mapboxgl.accessToken = MAPBOX_TOKEN
 
       // Limpiar mapa anterior si existe
       if (map.current) {
@@ -160,13 +157,11 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
 
       map.current.on('error', (e) => {
         console.error('Error del mapa:', e)
-        setIsTokenValid(false)
         setLoading(false)
       })
 
     } catch (error) {
       console.error('Error inicializando el mapa:', error)
-      setIsTokenValid(false)
       setLoading(false)
     }
 
@@ -175,7 +170,7 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
         map.current.remove()
       }
     }
-  }, [mapboxToken, paradasConCoordenadas, proximaParada])
+  }, [paradasConCoordenadas, proximaParada])
 
   if (paradasConCoordenadas.length === 0) {
     return (
@@ -183,64 +178,6 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
         <CardContent className="p-6 text-center">
           <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">No hay paradas con coordenadas válidas para mostrar en el mapa</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!mapboxToken) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Mapa de Ruta
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="mapbox-token">Token de Mapbox</Label>
-            <Input
-              id="mapbox-token"
-              type="password"
-              placeholder="Ingresa tu token público de Mapbox"
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-              className="font-mono"
-            />
-            <p className="text-sm text-muted-foreground">
-              Obtén tu token en{' '}
-              <a
-                href="https://mapbox.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                mapbox.com
-              </a>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!isTokenValid) {
-    return (
-      <Card>
-        <CardContent className="p-6 text-center space-y-4">
-          <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
-          <div>
-            <p className="text-destructive font-medium">Token de Mapbox inválido</p>
-            <p className="text-sm text-muted-foreground">Por favor verifica tu token.</p>
-          </div>
-          <Button
-            onClick={() => setMapboxToken('')}
-            variant="outline"
-            size="sm"
-          >
-            Cambiar token
-          </Button>
         </CardContent>
       </Card>
     )
