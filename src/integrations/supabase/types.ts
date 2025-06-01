@@ -509,6 +509,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      custom_access_token_hook: {
+        Args: { event: Json }
+        Returns: Json
+      }
       get_current_repartidor_id: {
         Args: Record<PropertyKey, never>
         Returns: number
