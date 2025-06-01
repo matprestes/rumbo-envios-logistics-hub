@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Panel from "./pages/Panel";
 import Repartos from "./pages/Repartos";
 import DetalleReparto from "./pages/DetalleReparto";
+import GenerarRepartos from "./pages/GenerarRepartos";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/panel" element={<Panel />} />
             <Route path="/repartos" element={<Repartos />} />
             <Route path="/reparto/:id" element={<DetalleReparto />} />
+            <Route path="/generar-repartos" element={<GenerarRepartos />} />
             <Route path="/demo" element={<Index />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
