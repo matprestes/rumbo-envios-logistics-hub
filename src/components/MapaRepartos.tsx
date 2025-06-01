@@ -6,6 +6,8 @@ import { ParadaReparto } from '@/types/database'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { AlertCircle, MapPin } from 'lucide-react'
 
 interface MapaRepartosProps {
   paradas: ParadaReparto[]
@@ -17,6 +19,7 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
   const map = useRef<mapboxgl.Map | null>(null)
   const [mapboxToken, setMapboxToken] = useState('')
   const [isTokenValid, setIsTokenValid] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   // Filtrar paradas que tienen coordenadas válidas
   const paradasConCoordenadas = paradas.filter(
@@ -26,9 +29,16 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
   useEffect(() => {
     if (!mapboxToken || !mapContainer.current || paradasConCoordenadas.length === 0) return
 
+    setLoading(true)
+    
     try {
       mapboxgl.accessToken = mapboxToken
       setIsTokenValid(true)
+
+      // Limpiar mapa anterior si existe
+      if (map.current) {
+        map.current.remove()
+      }
 
       // Inicializar el mapa
       map.current = new mapboxgl.Map({
@@ -56,26 +66,35 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
           // Crear elemento del marcador
           const markerElement = document.createElement('div')
           markerElement.className = `
-            w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold
-            ${isProxima ? 'bg-blue-500 border-blue-700 text-white animate-pulse' : 
-              isCompletada ? 'bg-green-500 border-green-700 text-white' : 
-              'bg-gray-500 border-gray-700 text-white'}
+            w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold cursor-pointer
+            ${isProxima ? 'bg-primary border-primary text-primary-foreground animate-pulse shadow-lg' : 
+              isCompletada ? 'bg-green-500 border-green-600 text-white shadow-md' : 
+              'bg-muted border-border text-muted-foreground shadow-sm hover:shadow-md'}
+            transition-all duration-200
           `
           markerElement.textContent = (parada.orden_visita || index + 1).toString()
 
           // Crear popup con información de la parada
-          const popup = new mapboxgl.Popup({ offset: 25 })
-            .setHTML(`
-              <div class="p-2">
-                <h3 class="font-semibold">${parada.descripcion_parada || `Parada ${parada.orden_visita || index + 1}`}</h3>
-                <p class="text-sm text-gray-600">${parada.envio.direccion_destino}</p>
-                <p class="text-sm ${isCompletada ? 'text-green-600' : isProxima ? 'text-blue-600' : 'text-gray-600'}">
-                  Estado: ${parada.estado_parada}
-                </p>
-                ${parada.hora_estimada_llegada ? `<p class="text-sm">Estimado: ${parada.hora_estimada_llegada}</p>` : ''}
-                ${parada.hora_real_llegada ? `<p class="text-sm">Real: ${parada.hora_real_llegada}</p>` : ''}
+          const popup = new mapboxgl.Popup({ 
+            offset: 25,
+            className: 'mapbox-popup-custom'
+          }).setHTML(`
+            <div class="p-3 min-w-[250px]">
+              <h3 class="font-semibold text-foreground mb-2">${parada.descripcion_parada || `Parada ${parada.orden_visita || index + 1}`}</h3>
+              <p class="text-sm text-muted-foreground mb-2">${parada.envio.direccion_destino}</p>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs px-2 py-1 rounded-full ${
+                  isCompletada ? 'bg-green-100 text-green-800' : 
+                  isProxima ? 'bg-primary/10 text-primary' : 
+                  'bg-muted text-muted-foreground'
+                }">
+                  ${parada.estado_parada}
+                </span>
               </div>
-            `)
+              ${parada.hora_estimada_llegada ? `<p class="text-xs text-muted-foreground">Estimado: ${parada.hora_estimada_llegada}</p>` : ''}
+              ${parada.hora_real_llegada ? `<p class="text-xs text-green-600">Real: ${parada.hora_real_llegada}</p>` : ''}
+            </div>
+          `)
 
           // Agregar marcador al mapa
           new mapboxgl.Marker(markerElement)
@@ -114,9 +133,9 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
               'line-cap': 'round'
             },
             paint: {
-              'line-color': '#3b82f6',
+              'line-color': 'hsl(var(--primary))',
               'line-width': 3,
-              'line-opacity': 0.7
+              'line-opacity': 0.8
             }
           })
         }
@@ -130,17 +149,31 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
               parada.envio!.latitud_destino!
             ])
           })
-          map.current.fitBounds(bounds, { padding: 50 })
+          map.current.fitBounds(bounds, { 
+            padding: { top: 50, bottom: 50, left: 50, right: 50 },
+            maxZoom: 15
+          })
         }
+
+        setLoading(false)
+      })
+
+      map.current.on('error', (e) => {
+        console.error('Error del mapa:', e)
+        setIsTokenValid(false)
+        setLoading(false)
       })
 
     } catch (error) {
       console.error('Error inicializando el mapa:', error)
       setIsTokenValid(false)
+      setLoading(false)
     }
 
     return () => {
-      map.current?.remove()
+      if (map.current) {
+        map.current.remove()
+      }
     }
   }, [mapboxToken, paradasConCoordenadas, proximaParada])
 
@@ -148,7 +181,8 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
     return (
       <Card>
         <CardContent className="p-6 text-center">
-          <p className="text-gray-500">No hay paradas con coordenadas válidas para mostrar en el mapa</p>
+          <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground">No hay paradas con coordenadas válidas para mostrar en el mapa</p>
         </CardContent>
       </Card>
     )
@@ -158,10 +192,13 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Mapa de Ruta</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Mapa de Ruta
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="mapbox-token">Token de Mapbox</Label>
             <Input
               id="mapbox-token"
@@ -169,15 +206,15 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
               placeholder="Ingresa tu token público de Mapbox"
               value={mapboxToken}
               onChange={(e) => setMapboxToken(e.target.value)}
-              className="mt-1"
+              className="font-mono"
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground">
               Obtén tu token en{' '}
               <a
                 href="https://mapbox.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-primary hover:underline"
               >
                 mapbox.com
               </a>
@@ -191,14 +228,19 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
   if (!isTokenValid) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
-          <p className="text-red-500">Token de Mapbox inválido. Por favor verifica tu token.</p>
-          <button
+        <CardContent className="p-6 text-center space-y-4">
+          <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
+          <div>
+            <p className="text-destructive font-medium">Token de Mapbox inválido</p>
+            <p className="text-sm text-muted-foreground">Por favor verifica tu token.</p>
+          </div>
+          <Button
             onClick={() => setMapboxToken('')}
-            className="mt-2 text-blue-600 hover:underline"
+            variant="outline"
+            size="sm"
           >
             Cambiar token
-          </button>
+          </Button>
         </CardContent>
       </Card>
     )
@@ -207,30 +249,42 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Mapa de Ruta</span>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            <span>Mapa de Ruta</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
               <span>Próxima</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               <span>Completada</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-muted rounded-full"></div>
               <span>Pendiente</span>
             </div>
           </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div
-          ref={mapContainer}
-          className="w-full h-96 rounded-lg"
-          style={{ minHeight: '400px' }}
-        />
+        <div className="relative">
+          {loading && (
+            <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span className="text-sm text-muted-foreground">Cargando mapa...</span>
+              </div>
+            </div>
+          )}
+          <div
+            ref={mapContainer}
+            className="w-full h-80 sm:h-96 rounded-lg border border-border"
+          />
+        </div>
       </CardContent>
     </Card>
   )
