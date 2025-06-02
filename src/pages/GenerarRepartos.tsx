@@ -5,7 +5,7 @@ import { Package } from 'lucide-react'
 import { ConfiguracionReparto } from '@/components/GenerarRepartos/ConfiguracionReparto'
 import { SeleccionClientes } from '@/components/GenerarRepartos/SeleccionClientes'
 import { BotonGeneracion } from '@/components/GenerarRepartos/BotonGeneracion'
-import { useGenerarRepartos } from '@/hooks/useGenerarRepartos'
+import { useGenerarRepartosCompleto } from '@/hooks/useGenerarRepartosCompleto'
 
 const GenerarRepartos = () => {
   const {
@@ -26,7 +26,7 @@ const GenerarRepartos = () => {
     toggleCliente,
     seleccionarTodos,
     generarReparto
-  } = useGenerarRepartos()
+  } = useGenerarRepartosCompleto()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
