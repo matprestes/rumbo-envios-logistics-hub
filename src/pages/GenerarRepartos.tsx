@@ -14,6 +14,8 @@ interface Empresa {
   id: number
   nombre: string
   direccion: string
+  latitud?: number
+  longitud?: number
 }
 
 interface Cliente {
@@ -21,6 +23,8 @@ interface Cliente {
   nombre: string
   apellido: string
   direccion: string
+  latitud?: number
+  longitud?: number
   telefono?: string
   email?: string
 }
@@ -65,7 +69,7 @@ const GenerarRepartos = () => {
       // Cargar empresas
       const { data: empresasData, error: empresasError } = await supabase
         .from('empresas')
-        .select('id, nombre, direccion')
+        .select('id, nombre, direccion, latitud, longitud')
         .eq('estado', 'activo')
         .order('nombre')
 
@@ -96,7 +100,7 @@ const GenerarRepartos = () => {
     try {
       const { data: clientesData, error } = await supabase
         .from('clientes')
-        .select('id, nombre, apellido, direccion, telefono, email')
+        .select('id, nombre, apellido, direccion, latitud, longitud, telefono, email')
         .eq('empresa_id', parseInt(empresaId))
         .eq('estado', 'activo')
         .order('nombre')
@@ -134,8 +138,14 @@ const GenerarRepartos = () => {
 
     try {
       setGenerando(true)
+      console.log('Iniciando generación de reparto...')
 
-      // Crear el reparto
+      const empresaSeleccionada = empresas.find(e => e.id === parseInt(empresaId))
+      if (!empresaSeleccionada) {
+        throw new Error('Empresa no encontrada')
+      }
+
+      // 1. Crear el reparto
       const { data: repartoData, error: repartoError } = await supabase
         .from('repartos')
         .insert({
@@ -143,31 +153,91 @@ const GenerarRepartos = () => {
           repartidor_id: parseInt(repartidorId),
           empresa_asociada_id: parseInt(empresaId),
           estado: 'planificado',
-          notas: notas || `Reparto generado para ${clientesSeleccionados.length} clientes`
+          notas: notas || `Reparto generado automáticamente para ${clientesSeleccionados.length} clientes`
         })
         .select()
         .single()
 
       if (repartoError) throw repartoError
+      console.log('Reparto creado:', repartoData)
 
-      // Crear envíos para cada cliente seleccionado
+      // 2. Crear envío de parada inicial (empresa)
+      const { data: envioInicialData, error: envioInicialError } = await supabase
+        .from('envios')
+        .insert({
+          direccion_origen: empresaSeleccionada.direccion,
+          latitud_origen: empresaSeleccionada.latitud,
+          longitud_origen: empresaSeleccionada.longitud,
+          direccion_destino: empresaSeleccionada.direccion,
+          latitud_destino: empresaSeleccionada.latitud,
+          longitud_destino: empresaSeleccionada.longitud,
+          empresa_origen_id: parseInt(empresaId),
+          precio: 0,
+          estado: 'asignado',
+          fecha_estimada_entrega: fecha,
+          repartidor_asignado_id: parseInt(repartidorId),
+          es_parada_inicio: true,
+          detalles_adicionales: `Punto de partida - ${empresaSeleccionada.nombre}`
+        })
+        .select()
+        .single()
+
+      if (envioInicialError) throw envioInicialError
+      console.log('Envío inicial creado:', envioInicialData)
+
+      // 3. Crear parada inicial (orden 0)
+      const { error: paradaInicialError } = await supabase
+        .from('paradas_reparto')
+        .insert({
+          reparto_id: repartoData.id,
+          envio_id: envioInicialData.id,
+          descripcion_parada: `Inicio de reparto - ${empresaSeleccionada.nombre}`,
+          orden_visita: 0,
+          estado_parada: 'asignado'
+        })
+
+      if (paradaInicialError) throw paradaInicialError
+      console.log('Parada inicial creada')
+
+      // 4. Crear envíos y paradas para cada cliente
       const enviosPromises = clientesSeleccionados.map(async (clienteId, index) => {
         const cliente = clientes.find(c => c.id === clienteId)
         if (!cliente) return null
+
+        console.log(`Creando envío para cliente ${index + 1}:`, cliente.nombre)
+
+        // Determinar origen: si es el primer cliente, origen es la empresa; si no, es el cliente anterior
+        let direccionOrigen = empresaSeleccionada.direccion
+        let latitudOrigen = empresaSeleccionada.latitud
+        let longitudOrigen = empresaSeleccionada.longitud
+        
+        if (index > 0) {
+          const clienteAnterior = clientes.find(c => c.id === clientesSeleccionados[index - 1])
+          if (clienteAnterior) {
+            direccionOrigen = clienteAnterior.direccion
+            latitudOrigen = clienteAnterior.latitud
+            longitudOrigen = clienteAnterior.longitud
+          }
+        }
 
         // Crear envío
         const { data: envioData, error: envioError } = await supabase
           .from('envios')
           .insert({
             remitente_cliente_id: clienteId,
-            direccion_origen: empresas.find(e => e.id === parseInt(empresaId))?.direccion || '',
+            direccion_origen: direccionOrigen,
+            latitud_origen: latitudOrigen,
+            longitud_origen: longitudOrigen,
             direccion_destino: cliente.direccion,
+            latitud_destino: cliente.latitud,
+            longitud_destino: cliente.longitud,
             empresa_origen_id: parseInt(empresaId),
             precio: 0,
             estado: 'asignado',
             fecha_estimada_entrega: fecha,
             repartidor_asignado_id: parseInt(repartidorId),
-            detalles_adicionales: `Envío generado automáticamente para ${cliente.nombre} ${cliente.apellido}`
+            es_parada_inicio: false,
+            detalles_adicionales: `Entrega a ${cliente.nombre} ${cliente.apellido}`
           })
           .select()
           .single()
@@ -187,12 +257,13 @@ const GenerarRepartos = () => {
 
         if (paradaError) throw paradaError
 
+        console.log(`Envío y parada creados para cliente ${index + 1}`)
         return envioData
       })
 
       await Promise.all(enviosPromises)
 
-      toast.success(`¡Reparto creado exitosamente! Se generaron ${clientesSeleccionados.length} paradas.`)
+      toast.success(`¡Reparto creado exitosamente! Se generaron ${clientesSeleccionados.length + 1} paradas (1 inicio + ${clientesSeleccionados.length} clientes).`)
       
       // Limpiar formulario
       setFecha('')
@@ -204,7 +275,7 @@ const GenerarRepartos = () => {
 
     } catch (error) {
       console.error('Error generando reparto:', error)
-      toast.error('Error al generar el reparto')
+      toast.error('Error al generar el reparto: ' + (error as Error).message)
     } finally {
       setGenerando(false)
     }
@@ -253,7 +324,7 @@ const GenerarRepartos = () => {
                 <Label htmlFor="empresa">Empresa Origen *</Label>
                 <Select value={empresaId} onValueChange={setEmpresaId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una empresa" />
+                    <SelectValue placeholder={loading ? "Cargando empresas..." : "Selecciona una empresa"} />
                   </SelectTrigger>
                   <SelectContent>
                     {empresas.map((empresa) => (
@@ -273,7 +344,7 @@ const GenerarRepartos = () => {
                 <Label htmlFor="repartidor">Repartidor Asignado *</Label>
                 <Select value={repartidorId} onValueChange={setRepartidorId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un repartidor" />
+                    <SelectValue placeholder={loading ? "Cargando repartidores..." : "Selecciona un repartidor"} />
                   </SelectTrigger>
                   <SelectContent>
                     {repartidores.map((repartidor) => (
@@ -387,7 +458,10 @@ const GenerarRepartos = () => {
               <div className="flex items-center gap-3 text-gray-600">
                 <AlertCircle className="h-5 w-5" />
                 <span className="text-sm">
-                  Se creará un reparto con {clientesSeleccionados.length} paradas para la fecha seleccionada
+                  Se creará un reparto con {clientesSeleccionados.length + (clientesSeleccionados.length > 0 ? 1 : 0)} paradas 
+                  {clientesSeleccionados.length > 0 && (
+                    <span> (1 parada de inicio + {clientesSeleccionados.length} clientes)</span>
+                  )}
                 </span>
               </div>
               <Button

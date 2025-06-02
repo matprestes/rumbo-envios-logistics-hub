@@ -123,6 +123,7 @@ export type Database = {
           direccion_origen: string
           empresa_destino_id: number | null
           empresa_origen_id: number | null
+          es_parada_inicio: boolean | null
           estado: Database["public"]["Enums"]["estado_envio_enum"] | null
           fecha_estimada_entrega: string | null
           horario_entrega_hasta: string | null
@@ -155,6 +156,7 @@ export type Database = {
           direccion_origen: string
           empresa_destino_id?: number | null
           empresa_origen_id?: number | null
+          es_parada_inicio?: boolean | null
           estado?: Database["public"]["Enums"]["estado_envio_enum"] | null
           fecha_estimada_entrega?: string | null
           horario_entrega_hasta?: string | null
@@ -187,6 +189,7 @@ export type Database = {
           direccion_origen?: string
           empresa_destino_id?: number | null
           empresa_origen_id?: number | null
+          es_parada_inicio?: boolean | null
           estado?: Database["public"]["Enums"]["estado_envio_enum"] | null
           fecha_estimada_entrega?: string | null
           horario_entrega_hasta?: string | null
@@ -509,6 +512,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      actualizar_orden_paradas_reparto: {
+        Args: { p_reparto_id: number; p_paradas_actualizadas: Json }
+        Returns: undefined
+      }
       custom_access_token_hook: {
         Args: { event: Json }
         Returns: Json
