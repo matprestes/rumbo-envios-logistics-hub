@@ -32,9 +32,14 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
     try {
       mapboxgl.accessToken = MAPBOX_TOKEN
 
-      // Limpiar mapa anterior si existe
+      // Limpiar mapa anterior si existe - con verificaciones de seguridad
       if (map.current) {
-        map.current.remove()
+        try {
+          map.current.remove()
+        } catch (error) {
+          console.warn('Error al remover el mapa anterior:', error)
+        }
+        map.current = null
       }
 
       // Inicializar el mapa
@@ -167,7 +172,27 @@ export const MapaRepartos = ({ paradas, proximaParada }: MapaRepartosProps) => {
 
     return () => {
       if (map.current) {
-        map.current.remove()
+        try {
+          // Verificar que el mapa esté completamente inicializado antes de destruir
+          if (map.current.isStyleLoaded && map.current.isStyleLoaded()) {
+            map.current.remove()
+          } else {
+            // Si el estilo no está cargado, esperar un momento antes de intentar destruir
+            setTimeout(() => {
+              if (map.current) {
+                try {
+                  map.current.remove()
+                } catch (error) {
+                  console.warn('Error al destruir el mapa:', error)
+                }
+              }
+            }, 100)
+          }
+        } catch (error) {
+          console.warn('Error al destruir el mapa:', error)
+        } finally {
+          map.current = null
+        }
       }
     }
   }, [paradasConCoordenadas, proximaParada])

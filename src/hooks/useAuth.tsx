@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .from('repartidores')
                 .select('*')
                 .eq('user_auth_id', session.user.id)
-                .maybeSingle() // Use maybeSingle instead of single to handle no data gracefully
+                .maybeSingle()
               
               if (error) {
                 console.error('Error fetching repartidor:', error)
