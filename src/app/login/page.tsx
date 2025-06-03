@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
-  const { user, login } = useAuth()
+  const { user, iniciarSesion } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,7 +27,10 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      await login(email, password)
+      const { error } = await iniciarSesion(email, password)
+      if (error) {
+        throw new Error(error.message)
+      }
       toast.success('Sesión iniciada correctamente')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al iniciar sesión'

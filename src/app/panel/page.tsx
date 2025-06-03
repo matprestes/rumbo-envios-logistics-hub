@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth'
 import { useRepartos } from '@/hooks/useRepartos'
 import { Navigate, Link } from 'react-router-dom'
@@ -19,7 +18,7 @@ import {
 } from 'lucide-react'
 
 export default function PanelPage() {
-  const { user, repartidor, logout } = useAuth()
+  const { user, repartidor, cerrarSesion } = useAuth()
   const { repartos, loading } = useRepartos()
 
   if (!user || !repartidor) {
@@ -53,7 +52,7 @@ export default function PanelPage() {
               <span className="text-sm text-gray-600">
                 Hola, {repartidor.nombre}
               </span>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={cerrarSesion}>
                 Cerrar Sesión
               </Button>
             </div>
