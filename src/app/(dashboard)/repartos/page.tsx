@@ -1,4 +1,6 @@
 
+'use client';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useRepartos } from '@/hooks/useRepartos';
 import { ListaRepartos } from '@/components/repartos/ListaRepartos';

@@ -1,20 +1,10 @@
 
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Home, AlertTriangle } from "lucide-react";
+import Link from "next/link";
 
 export default function NotFound() {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
       <Card className="w-full max-w-md text-center">
@@ -28,10 +18,10 @@ export default function NotFound() {
             La página que buscas no existe o ha sido movida.
           </p>
           <Button asChild className="w-full">
-            <a href="/panel">
+            <Link href="/panel">
               <Home className="h-4 w-4 mr-2" />
               Volver al Panel
-            </a>
+            </Link>
           </Button>
         </CardContent>
       </Card>

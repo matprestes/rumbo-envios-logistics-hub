@@ -1,83 +1,65 @@
 
+'use client';
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package } from 'lucide-react';
-import { ConfiguracionReparto } from '@/components/GenerarRepartos/ConfiguracionReparto';
-import { SeleccionClientes } from '@/components/GenerarRepartos/SeleccionClientes';
-import { BotonGeneracion } from '@/components/GenerarRepartos/BotonGeneracion';
-import { useGenerarRepartosCompleto } from '@/hooks/useGenerarRepartosCompleto';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 export default function NuevoRepartoPage() {
-  const {
-    fecha,
-    setFecha,
-    empresaId,
-    setEmpresaId,
-    repartidorId,
-    setRepartidorId,
-    notas,
-    setNotas,
-    empresas,
-    clientes,
-    repartidores,
-    clientesSeleccionados,
-    loading,
-    generando,
-    toggleCliente,
-    seleccionarTodos,
-    generarReparto
-  } = useGenerarRepartosCompleto();
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-foreground flex items-center justify-center gap-3">
-            <Package className="h-8 w-8 text-primary" />
-            Generar Repartos por Lote
-          </CardTitle>
-          <p className="text-muted-foreground text-lg">
-            Crea repartos masivos seleccionando empresa, fecha y clientes
+      <div className="flex items-center gap-4">
+        <Link href="/repartos">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Generar Nuevo Reparto
+          </h1>
+          <p className="text-muted-foreground">
+            Crea repartos automáticamente seleccionando clientes y configuraciones
           </p>
-        </CardHeader>
-      </Card>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Configuración del Reparto */}
-        <ConfiguracionReparto
-          fecha={fecha}
-          setFecha={setFecha}
-          empresaId={empresaId}
-          setEmpresaId={setEmpresaId}
-          repartidorId={repartidorId}
-          setRepartidorId={setRepartidorId}
-          notas={notas}
-          setNotas={setNotas}
-          empresas={empresas}
-          repartidores={repartidores}
-          loading={loading}
-        />
-
-        {/* Selección de Clientes */}
-        <SeleccionClientes
-          empresaId={empresaId}
-          clientes={clientes}
-          clientesSeleccionados={clientesSeleccionados}
-          toggleCliente={toggleCliente}
-          seleccionarTodos={seleccionarTodos}
-          loading={loading}
-        />
+        </div>
       </div>
 
-      {/* Botón de Generación */}
-      <BotonGeneracion
-        fecha={fecha}
-        empresaId={empresaId}
-        repartidorId={repartidorId}
-        clientesSeleccionados={clientesSeleccionados}
-        generando={generando}
-        onGenerarReparto={generarReparto}
-      />
+      {/* Formulario de Generación */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Plus className="h-5 w-5 mr-2 text-primary" />
+              Configuración del Reparto
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Esta funcionalidad estará disponible próximamente. 
+                Permite generar repartos automáticamente basados en ubicaciones geográficas y configuraciones personalizadas.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Vista Previa</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Aquí aparecerá la vista previa del reparto que se generará.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 
+'use client';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useRepartos } from '@/hooks/useRepartos';
 import { EstadisticasCards } from '@/components/dashboard/EstadisticasCards';

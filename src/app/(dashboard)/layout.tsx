@@ -1,5 +1,8 @@
 
-import { Navigate } from 'react-router-dom';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardNavbar } from '@/components/layout/DashboardNavbar';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
@@ -11,7 +14,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, repartidor, loading } = useAuth();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && (!user || !repartidor)) {
+      router.replace('/login');
+    }
+  }, [user, repartidor, loading, router]);
 
   if (loading) {
     return (
@@ -25,7 +35,7 @@ export default function DashboardLayout({
   }
 
   if (!user || !repartidor) {
-    return <Navigate to="/login" replace />;
+    return null; // Will redirect
   }
 
   return (

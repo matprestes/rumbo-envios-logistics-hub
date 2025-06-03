@@ -1,25 +1,28 @@
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Reparto, ParadaReparto } from '@/types/database'
-import { useAuth } from './useAuth'
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Reparto, ParadaReparto } from '@/types/database';
+import { useAuth } from './useAuth';
 
 export function useRepartos() {
-  const { repartidor, user } = useAuth()
-  const [repartos, setRepartos] = useState<Reparto[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { repartidor, user } = useAuth();
+  const [repartos, setRepartos] = useState<Reparto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
 
   const obtenerRepartos = async () => {
     try {
       if (!repartidor?.id || !user) {
-        setRepartos([])
-        setLoading(false)
-        return
+        setRepartos([]);
+        setLoading(false);
+        return;
       }
       
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       
       // RLS policies will ensure user only sees their own repartos
       const { data, error } = await supabase
@@ -32,27 +35,27 @@ export function useRepartos() {
           )
         `)
         .eq('repartidor_id', repartidor.id)
-        .order('fecha_reparto', { ascending: false })
+        .order('fecha_reparto', { ascending: false });
 
       if (error) {
-        console.error('Error fetching repartos:', error)
-        throw error
+        console.error('Error fetching repartos:', error);
+        throw error;
       }
 
-      setRepartos(data || [])
+      setRepartos(data || []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
-      setError(errorMessage)
-      console.error('Error obteniendo repartos:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError(errorMessage);
+      console.error('Error obteniendo repartos:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const obtenerRepartoPorId = async (repartoId: number) => {
     try {
       if (!repartidor?.id || !user) {
-        return { data: null, error: 'Usuario no autenticado' }
+        return { data: null, error: 'Usuario no autenticado' };
       }
 
       const { data, error } = await supabase
@@ -66,34 +69,34 @@ export function useRepartos() {
         `)
         .eq('id', repartoId)
         .eq('repartidor_id', repartidor.id) // Ensure ownership
-        .maybeSingle()
+        .maybeSingle();
 
       if (error) {
-        console.error('Error fetching reparto:', error)
-        throw error
+        console.error('Error fetching reparto:', error);
+        throw error;
       }
 
       if (!data) {
-        return { data: null, error: 'Reparto no encontrado o no autorizado' }
+        return { data: null, error: 'Reparto no encontrado o no autorizado' };
       }
 
-      return { data, error: null }
+      return { data, error: null };
     } catch (err) {
-      console.error('Error obteniendo reparto:', err)
-      return { data: null, error: err instanceof Error ? err.message : 'Error desconocido' }
+      console.error('Error obteniendo reparto:', err);
+      return { data: null, error: err instanceof Error ? err.message : 'Error desconocido' };
     }
-  }
+  };
 
   const actualizarEstadoReparto = async (repartoId: number, nuevoEstado: string) => {
     try {
       if (!repartidor?.id || !user) {
-        return { error: 'Usuario no autenticado' }
+        return { error: 'Usuario no autenticado' };
       }
 
       // Verify ownership before updating
-      const reparto = repartos.find(r => r.id === repartoId)
+      const reparto = repartos.find(r => r.id === repartoId);
       if (!reparto || reparto.repartidor_id !== repartidor.id) {
-        return { error: 'No autorizado para este reparto' }
+        return { error: 'No autorizado para este reparto' };
       }
 
       // Validate state transition
@@ -102,10 +105,10 @@ export function useRepartos() {
         'en_progreso': ['completado', 'cancelado'],
         'completado': [], // No transitions from completed
         'cancelado': [] // No transitions from cancelled
-      }
+      };
 
       if (!validTransitions[reparto.estado]?.includes(nuevoEstado)) {
-        return { error: 'Transición de estado inválida' }
+        return { error: 'Transición de estado inválida' };
       }
 
       const { error } = await supabase
@@ -115,9 +118,9 @@ export function useRepartos() {
           updated_at: new Date().toISOString()
         })
         .eq('id', repartoId)
-        .eq('repartidor_id', repartidor.id) // Double-check ownership
+        .eq('repartidor_id', repartidor.id); // Double-check ownership
 
-      if (error) throw error
+      if (error) throw error;
 
       setRepartos(prev => 
         prev.map(reparto => 
@@ -125,20 +128,20 @@ export function useRepartos() {
             ? { ...reparto, estado: nuevoEstado as any }
             : reparto
         )
-      )
+      );
 
-      return { success: true }
+      return { success: true };
     } catch (err) {
-      console.error('Error actualizando estado del reparto:', err)
-      return { error: err instanceof Error ? err.message : 'Error desconocido' }
+      console.error('Error actualizando estado del reparto:', err);
+      return { error: err instanceof Error ? err.message : 'Error desconocido' };
     }
-  }
+  };
 
   useEffect(() => {
     if (repartidor?.id && user) {
-      obtenerRepartos()
+      obtenerRepartos();
     }
-  }, [repartidor?.id, user])
+  }, [repartidor?.id, user]);
 
   return {
     repartos,
@@ -147,5 +150,5 @@ export function useRepartos() {
     obtenerRepartos,
     obtenerRepartoPorId,
     actualizarEstadoReparto,
-  }
+  };
 }
