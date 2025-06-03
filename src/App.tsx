@@ -1,30 +1,42 @@
 
-import { Routes, Route, Navigate } from "react-router-dom";
-import RootLayout from "./app/layout";
-import HomePage from "./app/page";
-import LoginPage from "./app/login/page";
-import PanelPage from "./app/panel/page";
-import RepartosPage from "./app/repartos/page";
-import DetalleReparto from "./pages/DetalleReparto";
-import GenerarRepartos from "./pages/GenerarRepartos";
-import MapaRutasPage from "./app/mapa-rutas/page";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { Routes, Route } from 'react-router-dom';
+import RootLayout from './app/layout';
+import HomePage from './app/page';
+import NotFound from './app/not-found';
 
-const App = () => (
-  <RootLayout>
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/panel" element={<PanelPage />} />
-      <Route path="/repartos" element={<RepartosPage />} />
-      <Route path="/reparto/:id" element={<DetalleReparto />} />
-      <Route path="/generar-repartos" element={<GenerarRepartos />} />
-      <Route path="/mapa-rutas" element={<MapaRutasPage />} />
-      <Route path="/demo" element={<Index />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  </RootLayout>
-);
+// Páginas principales
+import LoginPage from './app/login/page';
+
+// Páginas del dashboard (protegidas)
+import DashboardLayout from './app/(dashboard)/layout';
+import PanelPage from './app/(dashboard)/panel/page';
+import RepartosPage from './app/(dashboard)/repartos/page';
+import NuevoRepartoPage from './app/(dashboard)/repartos/nuevo/page';
+import DetalleRepartoPage from './app/(dashboard)/repartos/[id]/page';
+import MapaRutasPage from './app/(dashboard)/mapa-rutas/page';
+
+function App() {
+  return (
+    <RootLayout>
+      <Routes>
+        {/* Ruta principal */}
+        <Route path="/" element={<HomePage />} />
+        
+        {/* Autenticación */}
+        <Route path="/login" element={<LoginPage />} />
+        
+        {/* Rutas del dashboard (protegidas) */}
+        <Route path="/panel" element={<DashboardLayout><PanelPage /></DashboardLayout>} />
+        <Route path="/repartos" element={<DashboardLayout><RepartosPage /></DashboardLayout>} />
+        <Route path="/repartos/nuevo" element={<DashboardLayout><NuevoRepartoPage /></DashboardLayout>} />
+        <Route path="/repartos/:id" element={<DashboardLayout><DetalleRepartoPage /></DashboardLayout>} />
+        <Route path="/mapa-rutas" element={<DashboardLayout><MapaRutasPage /></DashboardLayout>} />
+        
+        {/* Página 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </RootLayout>
+  );
+}
 
 export default App;
