@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { Reparto, ParadaReparto } from '@/types/database';
 import { useAuth } from './useAuth';
 
@@ -11,7 +10,6 @@ export function useRepartos() {
   const [repartos, setRepartos] = useState<Reparto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
   const obtenerRepartos = async () => {
     try {
