@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,7 +41,7 @@ export function useRepartos() {
         throw error;
       }
 
-      setRepartos(data || []);
+      setRepartos(data as Reparto[] || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMessage);
@@ -78,7 +79,7 @@ export function useRepartos() {
         return { data: null, error: 'Reparto no encontrado o no autorizado' };
       }
 
-      return { data, error: null };
+      return { data: data as Reparto, error: null };
     } catch (err) {
       console.error('Error obteniendo reparto:', err);
       return { data: null, error: err instanceof Error ? err.message : 'Error desconocido' };
@@ -123,7 +124,7 @@ export function useRepartos() {
       setRepartos(prev => 
         prev.map(reparto => 
           reparto.id === repartoId 
-            ? { ...reparto, estado: nuevoEstado as any }
+            ? { ...reparto, estado: nuevoEstado as Reparto['estado'] }
             : reparto
         )
       );

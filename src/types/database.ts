@@ -37,7 +37,7 @@ export interface Entrega {
   peso_kg?: number
   tipo_servicio_id?: number
   precio: number
-  estado: 'pendiente_asignacion' | 'asignado' | 'en_progreso' | 'completada' | 'cancelada'
+  estado: 'pendiente_asignacion' | 'asignado' | 'en_progreso' | 'completado' | 'cancelado'
   fecha_estimada_entrega?: string
   horario_retiro_desde?: string
   horario_entrega_hasta?: string

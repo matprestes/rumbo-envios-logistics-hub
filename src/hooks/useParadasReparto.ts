@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -54,7 +55,7 @@ export function useParadasReparto(repartoId?: number) {
         throw error;
       }
 
-      setParadas(data || []);
+      setParadas(data as ParadaReparto[] || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMessage);
@@ -108,7 +109,7 @@ export function useParadasReparto(repartoId?: number) {
       setParadas(prev => 
         prev.map(parada => 
           parada.id === paradaId 
-            ? { ...parada, estado_parada: nuevoEstado as any, ...updateData }
+            ? { ...parada, estado_parada: nuevoEstado as ParadaReparto['estado_parada'], ...updateData }
             : parada
         )
       );
