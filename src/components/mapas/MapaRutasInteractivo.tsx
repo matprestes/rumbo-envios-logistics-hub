@@ -13,88 +13,27 @@ interface MapaRutasInteractivoProps {
 
 export function MapaRutasInteractivo({ repartos, loading }: MapaRutasInteractivoProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
+  const [googleMapsToken, setGoogleMapsToken] = useState('');
   const [showTokenInput, setShowTokenInput] = useState(true);
-  const [map, setMap] = useState<any>(null);
 
   const initializeMap = async (token: string) => {
     if (!mapContainer.current || !token) return;
 
     try {
-      // Importar mapbox dinámicamente
-      const mapboxgl = await import('mapbox-gl');
-      mapboxgl.default.accessToken = token;
-
-      const newMap = new mapboxgl.default.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [-58.3816, -34.6037], // Buenos Aires como centro por defecto
-        zoom: 10,
-      });
-
-      // Agregar controles de navegación
-      newMap.addControl(new mapboxgl.default.NavigationControl(), 'top-right');
-
-      // Agregar marcadores para cada reparto
-      repartos.forEach((reparto) => {
-        if (reparto.paradas) {
-          reparto.paradas.forEach((parada) => {
-            if (parada.envio?.latitud_destino && parada.envio?.longitud_destino) {
-              const marker = new mapboxgl.default.Marker({
-                color: getMarkerColor(reparto.estado)
-              })
-                .setLngLat([parada.envio.longitud_destino, parada.envio.latitud_destino])
-                .setPopup(
-                  new mapboxgl.default.Popup()
-                    .setHTML(`
-                      <div class="p-2">
-                        <h3 class="font-semibold">Reparto #${reparto.id}</h3>
-                        <p class="text-sm">Parada ${parada.orden_visita}</p>
-                        <p class="text-xs">${parada.envio.direccion_destino}</p>
-                        <p class="text-xs">Estado: ${reparto.estado}</p>
-                      </div>
-                    `)
-                )
-                .addTo(newMap);
-            }
-          });
-        }
-      });
-
-      setMap(newMap);
+      // Here you would initialize Google Maps instead of Mapbox
+      // For now, we'll show a placeholder
       setShowTokenInput(false);
-
-      return () => {
-        newMap.remove();
-      };
     } catch (error) {
       console.error('Error inicializando mapa:', error);
     }
   };
 
-  const getMarkerColor = (estado: string) => {
-    switch (estado) {
-      case 'planificado': return '#3b82f6'; // blue
-      case 'en_progreso': return '#f59e0b'; // orange
-      case 'completado': return '#10b981'; // green
-      case 'cancelado': return '#ef4444'; // red
-      default: return '#6b7280'; // gray
-    }
-  };
-
   const handleTokenSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (mapboxToken.trim()) {
-      initializeMap(mapboxToken.trim());
+    if (googleMapsToken.trim()) {
+      initializeMap(googleMapsToken.trim());
     }
   };
-
-  useEffect(() => {
-    if (map && repartos.length > 0) {
-      // Actualizar marcadores cuando cambien los repartos
-      // (implementación simplificada, en producción sería más complejo)
-    }
-  }, [repartos, map]);
 
   if (loading) {
     return (
@@ -116,7 +55,7 @@ export function MapaRutasInteractivo({ repartos, loading }: MapaRutasInteractivo
               <MapPin className="h-12 w-12 mx-auto text-primary mb-4" />
               <h3 className="text-lg font-semibold mb-2">Configurar Google Maps</h3>
               <p className="text-sm text-muted-foreground">
-                Ingresa tu token de Mapbox para visualizar las rutas
+                Ingresa tu API Key de Google Maps para visualizar las rutas
               </p>
             </div>
             
@@ -124,13 +63,13 @@ export function MapaRutasInteractivo({ repartos, loading }: MapaRutasInteractivo
               <div>
                 <Input
                   type="password"
-                  placeholder="Token de Mapbox"
-                  value={mapboxToken}
-                  onChange={(e) => setMapboxToken(e.target.value)}
+                  placeholder="Google Maps API Key"
+                  value={googleMapsToken}
+                  onChange={(e) => setGoogleMapsToken(e.target.value)}
                   required
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  Obtén tu token en <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a>
+                  Obtén tu API Key en <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google Cloud Console</a>
                 </p>
               </div>
               <Button type="submit" className="w-full">
@@ -162,7 +101,13 @@ export function MapaRutasInteractivo({ repartos, loading }: MapaRutasInteractivo
 
   return (
     <div className="relative h-full w-full">
-      <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
+      <div ref={mapContainer} className="absolute inset-0 rounded-lg bg-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground">Mapa de Google no disponible</p>
+          <p className="text-sm text-muted-foreground/70">Configure la API Key para ver las rutas</p>
+        </div>
+      </div>
       
       {/* Leyenda */}
       <div className="absolute top-4 left-4 bg-card p-3 rounded-lg shadow-lg border z-10">

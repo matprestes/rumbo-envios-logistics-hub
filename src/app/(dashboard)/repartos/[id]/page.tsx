@@ -13,15 +13,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Reparto } from '@/types/database';
 
 export default function DetalleRepartoPage() {
   const params = useParams();
   const router = useRouter();
   const repartoId = parseInt(params.id as string);
-  const { obtenerRepartoPorId } = useRepartos();
-  const { paradas, loading: paradasLoading } = useParadasReparto(repartoId);
+  const { obtenerRepartoPorId, actualizarEstadoReparto } = useRepartos();
+  const { paradas, loading: paradasLoading, iniciarParada, completarParada, abrirNavegacion } = useParadasReparto(repartoId);
   
-  const [reparto, setReparto] = useState<any>(null);
+  const [reparto, setReparto] = useState<Reparto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,6 +52,28 @@ export default function DetalleRepartoPage() {
 
     cargarReparto();
   }, [repartoId, obtenerRepartoPorId]);
+
+  const iniciarReparto = async () => {
+    if (!reparto || reparto.estado !== 'planificado') return;
+    
+    const resultado = await actualizarEstadoReparto(reparto.id, 'en_progreso');
+    if (resultado.success) {
+      setReparto(prev => prev ? { ...prev, estado: 'en_progreso' as any } : null);
+    }
+  };
+
+  const proximaParada = paradas.find(p => p.estado_parada === 'asignado') || 
+                      paradas.find(p => p.estado_parada === 'en_progreso');
+
+  const navegarAProximaParada = () => {
+    if (!proximaParada?.envio) return;
+    
+    abrirNavegacion(
+      proximaParada.envio.direccion_destino,
+      proximaParada.envio.latitud_destino,
+      proximaParada.envio.longitud_destino
+    );
+  };
 
   if (loading) {
     return (
@@ -109,9 +132,6 @@ export default function DetalleRepartoPage() {
     );
   }
 
-  const proximaParada = paradas.find(p => p.estado_parada === 'asignado') || 
-                      paradas.find(p => p.estado_parada === 'en_progreso');
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -120,7 +140,12 @@ export default function DetalleRepartoPage() {
       {/* Información y Mapa */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <InformacionReparto reparto={reparto} />
+          <InformacionReparto 
+            reparto={reparto} 
+            proximaParada={proximaParada}
+            onIniciarReparto={iniciarReparto}
+            onNavegar={navegarAProximaParada}
+          />
         </div>
         <div className="lg:col-span-2">
           <MapaRepartosGoogle 
@@ -133,8 +158,10 @@ export default function DetalleRepartoPage() {
       {/* Lista de Paradas */}
       <ListaParadas 
         paradas={paradas}
-        loading={paradasLoading}
-        repartoId={repartoId}
+        proximaParada={proximaParada}
+        onIniciarParada={iniciarParada}
+        onCompletarParada={completarParada}
+        onNavegar={abrirNavegacion}
       />
     </div>
   );
