@@ -28,7 +28,7 @@ const Panel = () => {
   })
 
   const stats = {
-    completadas: entregas.filter(e => e.estado === 'completada').length,
+    completadas: entregas.filter(e => e.estado === 'completado').length,
     pendientes: entregas.filter(e => e.estado === 'pendiente_asignacion').length,
     enProgreso: entregas.filter(e => e.estado === 'en_progreso').length,
     repartosActivos: repartos.filter(r => r.estado === 'en_progreso' || r.estado === 'planificado').length,
@@ -37,7 +37,7 @@ const Panel = () => {
   const filteredEntregas = selectedTab === 'todas' 
     ? entregas 
     : entregas.filter(e => {
-        if (selectedTab === 'activas') return e.estado !== 'completada'
+        if (selectedTab === 'activas') return e.estado !== 'completado'
         return e.estado === selectedTab
       })
 
@@ -47,7 +47,7 @@ const Panel = () => {
         return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Pendiente</Badge>
       case 'en_progreso':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">En Progreso</Badge>
-      case 'completada':
+      case 'completado':
         return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completada</Badge>
       default:
         return <Badge variant="outline">{estado}</Badge>
@@ -215,10 +215,10 @@ const Panel = () => {
             <div className="flex flex-wrap gap-2 mb-6">
               {[
                 { key: 'todas', label: 'Todas', count: entregas.length },
-                { key: 'activas', label: 'Activas', count: entregas.filter(e => e.estado !== 'completada').length },
+                { key: 'activas', label: 'Activas', count: entregas.filter(e => e.estado !== 'completado').length },
                 { key: 'pendiente_asignacion', label: 'Pendientes', count: stats.pendientes },
                 { key: 'en_progreso', label: 'En Progreso', count: stats.enProgreso },
-                { key: 'completada', label: 'Completadas', count: stats.completadas }
+                { key: 'completado', label: 'Completadas', count: stats.completadas }
               ].map(tab => (
                 <Button
                   key={tab.key}
@@ -283,7 +283,7 @@ const Panel = () => {
                     </div>
                   </div>
                   
-                  {entrega.estado !== 'completada' && (
+                  {entrega.estado !== 'completado' && (
                     <div className="flex gap-2 mt-4">
                       {entrega.estado === 'pendiente_asignacion' && (
                         <Button

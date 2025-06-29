@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -86,7 +87,7 @@ export function useRepartos() {
     }
   };
 
-  const actualizarEstadoReparto = async (repartoId: number, nuevoEstado: string) => {
+  const actualizarEstadoReparto = async (repartoId: number, nuevoEstado: Reparto['estado']) => {
     try {
       if (!repartidor?.id || !user) {
         return { error: 'Usuario no autenticado' };

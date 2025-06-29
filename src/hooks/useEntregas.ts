@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 import { Entrega } from '@/types/database'
 import { useAuth } from './useAuth'
 
@@ -59,7 +59,7 @@ export function useEntregas() {
       }
 
       const updateData: any = {
-        estado: 'completada',
+        estado: 'completado',
         updated_at: new Date().toISOString(),
       }
 
@@ -79,7 +79,7 @@ export function useEntregas() {
       setEntregas(prev => 
         prev.map(entrega => 
           entrega.id === entregaId 
-            ? { ...entrega, estado: 'completada', foto_comprobante: fotoUrl }
+            ? { ...entrega, estado: 'completado' as Entrega['estado'], foto_comprobante: fotoUrl }
             : entrega
         )
       )
@@ -105,11 +105,11 @@ export function useEntregas() {
 
       // Validate state transition
       const validTransitions: Record<string, string[]> = {
-        'pendiente_asignacion': ['asignado', 'cancelada'],
-        'asignado': ['en_progreso', 'cancelada'],
-        'en_progreso': ['completada', 'cancelada'],
-        'completada': [], // No transitions from completed
-        'cancelada': [] // No transitions from cancelled
+        'pendiente_asignacion': ['asignado', 'cancelado'],
+        'asignado': ['en_progreso', 'cancelado'],
+        'en_progreso': ['completado', 'cancelado'],
+        'completado': [], // No transitions from completed
+        'cancelado': [] // No transitions from cancelled
       }
 
       if (!validTransitions[entrega.estado]?.includes(nuevoEstado)) {
@@ -131,7 +131,7 @@ export function useEntregas() {
       setEntregas(prev => 
         prev.map(entrega => 
           entrega.id === entregaId 
-            ? { ...entrega, estado: nuevoEstado as any }
+            ? { ...entrega, estado: nuevoEstado as Entrega['estado'] }
             : entrega
         )
       )
