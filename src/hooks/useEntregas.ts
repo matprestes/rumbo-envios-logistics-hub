@@ -22,12 +22,11 @@ export function useEntregas() {
       setError(null)
       
       // Only fetch deliveries assigned to current repartidor
+      // Note: envios doesn't have a direct relation to clientes table
+      // It uses fields like nombre_destinatario, telefono_destinatario directly
       const { data, error } = await supabase
         .from('envios')
-        .select(`
-          *,
-          cliente:clientes(*)
-        `)
+        .select('*')
         .eq('repartidor_asignado_id', repartidor.id)
         .order('created_at', { ascending: false })
 
@@ -36,7 +35,21 @@ export function useEntregas() {
         throw error
       }
 
-      setEntregas(data || [])
+      // Transform the data to match our Entrega interface
+      const transformedData = (data || []).map(envio => ({
+        ...envio,
+        // Create a cliente object from the envio data
+        cliente: envio.nombre_destinatario ? {
+          id: 0, // placeholder since there's no actual cliente record
+          nombre: envio.nombre_destinatario || '',
+          apellido: '',
+          direccion: envio.direccion_destino,
+          telefono: envio.telefono_destinatario || undefined,
+          email: envio.email_destinatario || undefined,
+        } : undefined
+      }))
+
+      setEntregas(transformedData as Entrega[])
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
       setError(errorMessage)
@@ -91,7 +104,7 @@ export function useEntregas() {
     }
   }
 
-  const actualizarEstado = async (entregaId: number, nuevoEstado: string) => {
+  const actualizarEstado = async (entregaId: number, nuevoEstado: Entrega['estado']) => {
     try {
       if (!user || !repartidor) {
         return { error: 'Usuario no autenticado' }
